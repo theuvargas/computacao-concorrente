@@ -19,6 +19,17 @@ void* tarefa (void* arg) {
     pthread_exit(NULL);
 }
 
+void teste(void) {
+    for (int i = 0; i < TAM; i++) {
+        if (vetor[i] != i * i) {
+            printf("Erro na posicao %d: \'%d\' esperado, \'%d\' na posicao\n", i, i*i, vetor[i]);
+            exit(-1);
+        }
+    }
+
+    printf("Teste passou!\n");
+}
+
 int main(void) {
     pthread_t tid[NTHREADS];
     pthread_t threads[NTHREADS];
@@ -27,13 +38,10 @@ int main(void) {
         threads[i] = i;
     }
     
-
     for (int i = 0; i < TAM; i++) {
         vetor[i] = i;
     }
     
-    printf("ANTES:  posicao 9999 no vetor -> %d\n", vetor[TAM-1]);
-
     for (int i = 0; i < NTHREADS; i++) {
         if (pthread_create(&tid[i], NULL, tarefa, (void*) &threads[i])) {
             printf("erro na funcao pthread_create()\n");
@@ -48,7 +56,7 @@ int main(void) {
         }
     }
 
-    printf("DEPOIS: posicao 9999 no vetor -> %d\n", vetor[TAM-1]);
+    teste();
 
     return 0;
 }
