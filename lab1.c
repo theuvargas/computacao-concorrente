@@ -30,10 +30,10 @@ int main(void) {
     pthread_t threads[] = {1, 2};
 
     for (int i = 0; i < TAM; i++) {
-        vetor[i] = i+1;
+        vetor[i] = i;
     }
     
-    printf("ANTES:  posicao 9999 no vetor -> %d\n", vetor[TAM-2]);
+    printf("ANTES:  posicao 9999 no vetor -> %d\n", vetor[TAM-1]);
 
     for (int i = 0; i < NTHREADS; i++) {
         if (pthread_create(&tid[i], NULL, tarefa, (void*) &threads[i])) {
@@ -49,7 +49,7 @@ int main(void) {
         }
     }
 
-    printf("DEPOIS: posicao 9999 no vetor -> %d\n", vetor[TAM-2]);
+    printf("DEPOIS: posicao 9999 no vetor -> %d\n", vetor[TAM-1]);
 
     return 0;
 }
