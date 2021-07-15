@@ -10,16 +10,10 @@ int vetor[TAM];
 void* tarefa (void* arg) {
     int numThread = *(int*) arg;
     
-    if (numThread == 1) {
-        for (int i = 0; i < TAM/2; i++) {
-            vetor[i] = vetor[i] * vetor[i];
-        }
-    }
-
-    else if (numThread == 2) {
-        for (int i = TAM/2; i < TAM; i++) {
-            vetor[i] = vetor[i] * vetor[i];
-        }
+    for (int i = 0; i < TAM; i++) {
+        if (i % NTHREADS == numThread) {
+            vetor[i] = vetor[i] * vetor[i];   
+        }       
     }
 
     pthread_exit(NULL);
@@ -27,7 +21,12 @@ void* tarefa (void* arg) {
 
 int main(void) {
     pthread_t tid[NTHREADS];
-    pthread_t threads[] = {1, 2};
+    pthread_t threads[NTHREADS];
+
+    for (int i = 0; i < NTHREADS; i++) {
+        threads[i] = i;
+    }
+    
 
     for (int i = 0; i < TAM; i++) {
         vetor[i] = i;
@@ -37,14 +36,14 @@ int main(void) {
 
     for (int i = 0; i < NTHREADS; i++) {
         if (pthread_create(&tid[i], NULL, tarefa, (void*) &threads[i])) {
-            printf("erro na funcao pthread_create()");
+            printf("erro na funcao pthread_create()\n");
             exit(-1);
         }
     }
     
     for (int i = 0; i < NTHREADS; i++) {
         if (pthread_join(tid[i], NULL)) {
-            printf("erro na funcao pthread_join()");
+            printf("erro na funcao pthread_join()\n");
             exit(-1);
         }
     }
