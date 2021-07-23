@@ -33,7 +33,7 @@ void preencheMatrizes(void) {
     }
 }
 
-void multiplicaMatrizesSequencial(void) {
+void multiplicaMatrizesSequencial(int* m1, int* m2) {
     for (size_t i = 0; i < dimensao; i++) {
         for (size_t j = 0; j < dimensao; j++) {
             for (size_t k = 0; k < dimensao; k++) {
@@ -100,14 +100,19 @@ int main(int argc, char* argv[]) {
     double deltaInit = fim - inicio;
 
     inicio = get_wall_time();
-
-    for (size_t i = 0; i < nthreads; i++) {
-        threads[i] = i;
-        pthread_create(&tid[i], NULL, multiplicaMatrizesParalelo, (void*) &threads[i]);
+    
+    if (nthreads == 1) {
+        multiplicaMatrizesSequencial(m1, m2);
     }
+    else {
+        for (size_t i = 0; i < nthreads; i++) {
+            threads[i] = i;
+            pthread_create(&tid[i], NULL, multiplicaMatrizesParalelo, (void*) &threads[i]);
+        }
 
-    for (size_t i = 0; i < nthreads; i++){
-        pthread_join(tid[i], NULL);
+        for (size_t i = 0; i < nthreads; i++){
+            pthread_join(tid[i], NULL);
+        }
     }
     
     fim = get_wall_time();
