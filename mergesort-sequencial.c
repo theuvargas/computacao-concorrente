@@ -121,19 +121,15 @@ double get_wall_time(){
     return (double)time.tv_sec + (double)time.tv_usec * .000001;
 }
 
-// compara o vetor ordenado "vetor" com a ordenacao que sera gerada ao utilizar Insertion Sort no vetor "refencia"
-void teste(int* vetor, int* referencia) {
-    double inicio = get_wall_time();
-    insertionSort(referencia, 0, TAM-1);
-    double fim = get_wall_time();
-
-    printf("Insertion sort:   %lf segundos\n", fim-inicio);
-
-    if (!vetoresSaoIguais(vetor, referencia, TAM)) {
-        printf("vetores sao diferentes\n");
-        return;
+void teste(int* v, int tam) {
+    int maior = v[0];
+    for (int i = 1; i < tam; i++) {
+        if (v[i] >= maior) maior = v[i];
+        else {
+            printf("ordenacao incorreta\n");
+            return;
+        }
     }
-
     printf("teste passou\n");
 }
 
@@ -142,25 +138,31 @@ int main() {
     srand(time(NULL));
 
     int* vetor = malloc(TAM*sizeof(int));
-    if (vetor == NULL) printf("erro malloc 1\n");
+    if (vetor == NULL) {
+        printf("erro malloc 1\n");
+        exit(1);
+    }
 
     preencheVetor(vetor, TAM);
-    // printaVetor(vetor, TAM);
 
     int* comparacao = malloc(TAM * sizeof(int));
-    if (comparacao == NULL) printf("erro malloc 2\n");
+    if (comparacao == NULL) {
+        printf("erro malloc 2\n");
+        exit(1);
+    }
     copiaVetor(vetor, comparacao, TAM);
 
     int* res = malloc(TAM * sizeof(int)); // vetor auxiliar que ajuda a otimizar o codigo
-    if (res == NULL) printf("erro malloc 3\n");
+    if (res == NULL) {
+        printf("erro malloc 3\n");
+        exit(1);
+    }
 
     inicio = get_wall_time();
     mergesort(vetor, res, 0, TAM-1);
     fim = get_wall_time();
 
     printf("Merge sort:       %lf segundos\n", fim-inicio);
-
-    // teste(vetor, comparacao); // teste desligado
 
     inicio = get_wall_time();
     mergesortMisto(comparacao, res, 0, TAM-1);
