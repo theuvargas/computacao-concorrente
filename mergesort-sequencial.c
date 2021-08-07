@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 
 // maximo de 10^8, com 10^9 o processo eh finalizado pelo sistema operacional
-#define TAM 100000
+#define TAM 1000000
+#define LIMITE 30 // tamanho minimo do vetor para que o algoritmo use Insertion Sort
 
 void printaVetor(int* vet, int n) {
     for (int i = 0; i < n; i++) {
@@ -12,13 +14,12 @@ void printaVetor(int* vet, int n) {
     printf("\n");
 }
 
-// para comparar o resultado com o merge
-void insertionSort(int* vet, int n){
+void insertionSort(int* vet, int inicio, int fim){
     int i, j, valor;
-    for (i = 1; i < n; i++) {
+    for (i = inicio+1; i <= fim; i++) {
         valor = vet[i];
         j = i - 1;
-        while (j >= 0 && vet[j] > valor) {
+        while (j >= inicio && vet[j] > valor) {
             vet[j + 1] = vet[j];
             j = j - 1;
         }
@@ -35,8 +36,6 @@ void merge(int* v, int* resultado, int inicio, int meio, int fim) {
     int fimDir = fim;
 
     int indice = 0;
-
-    // int resultado[fim-inicio+1];
 
     // compara os valores mais a esquerda dos vetores e copia para resultado[] o menor numero
     while (indiceEsq <= fimEsq && indiceDir <= fimDir) {
@@ -65,8 +64,24 @@ void merge(int* v, int* resultado, int inicio, int meio, int fim) {
     }
 }
 
+// se o tamanho vetor for menor ou igual a LIMITE, utiliza InsertionSort; caso contrario, utiliza MergeSort
+void mergesortMisto(int* vet, int* res, int inicio, int fim) {
+    if (fim-inicio+1 > LIMITE) {
+        int meio = (inicio+fim) / 2;
+
+        // ordena as metades do vetor
+        mergesortMisto(vet, res, inicio, meio);
+        mergesortMisto(vet, res, meio+1, fim);
+
+        // funde metades de forma ordenada
+        merge(vet, res, inicio, meio, fim);
+    }
+
+    else if (fim-inicio+1 >= 1) insertionSort(vet, inicio, fim);
+}
+
 void mergesort(int* vet, int* res, int inicio, int fim) {
-    if (inicio < fim) {
+    if (fim-inicio+1 != 1) {
         int meio = (inicio+fim) / 2;
 
         // ordena as metades do vetor
@@ -97,8 +112,22 @@ void preencheVetor(int* vet, int tam) {
     }
 }
 
+double get_wall_time(){
+    struct timeval time;
+    if (gettimeofday(&time, NULL)){
+        printf("Erro na funcao gettimeofday()");
+        return 0;
+    }
+    return (double)time.tv_sec + (double)time.tv_usec * .000001;
+}
+
+// compara o vetor ordenado "vetor" com a ordenacao que sera gerada ao utilizar Insertion Sort no vetor "refencia"
 void teste(int* vetor, int* referencia) {
-    insertionSort(referencia, TAM);
+    double inicio = get_wall_time();
+    insertionSort(referencia, 0, TAM-1);
+    double fim = get_wall_time();
+
+    printf("Insertion sort:   %lf segundos\n", fim-inicio);
 
     if (!vetoresSaoIguais(vetor, referencia, TAM)) {
         printf("vetores sao diferentes\n");
@@ -108,14 +137,15 @@ void teste(int* vetor, int* referencia) {
     printf("teste passou\n");
 }
 
-// compara a ordenacao por mergesort e por insertion sort
 int main() {
+    double inicio, fim;
     srand(time(NULL));
 
     int* vetor = malloc(TAM*sizeof(int));
     if (vetor == NULL) printf("erro malloc 1\n");
 
     preencheVetor(vetor, TAM);
+    // printaVetor(vetor, TAM);
 
     int* comparacao = malloc(TAM * sizeof(int));
     if (comparacao == NULL) printf("erro malloc 2\n");
@@ -124,9 +154,21 @@ int main() {
     int* res = malloc(TAM * sizeof(int)); // vetor auxiliar que ajuda a otimizar o codigo
     if (res == NULL) printf("erro malloc 3\n");
 
+    inicio = get_wall_time();
     mergesort(vetor, res, 0, TAM-1);
+    fim = get_wall_time();
 
-    // teste(vetor, comparacao); teste desligado
+    printf("Merge sort:       %lf segundos\n", fim-inicio);
+
+    // teste(vetor, comparacao); // teste desligado
+
+    inicio = get_wall_time();
+    mergesortMisto(comparacao, res, 0, TAM-1);
+    fim = get_wall_time();
+
+    printf("Merge sort misto: %lf segundos\n", fim-inicio);
+
+    if (!vetoresSaoIguais(vetor, comparacao, TAM)) printf("vetores sao diferentes\n");
 
     free(vetor);
     free(res);
