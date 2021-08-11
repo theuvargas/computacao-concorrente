@@ -16,7 +16,7 @@ void printaVetor(int* vet, int n) {
 
 void insertionSort(int* vet, int inicio, int fim){
     int i, j, valor;
-    for (i = inicio+1; i <= fim; i++) {
+    for (i = inicio+1; i < fim; i++) {
         valor = vet[i];
         j = i - 1;
         while (j >= inicio && vet[j] > valor) {
@@ -30,7 +30,7 @@ void insertionSort(int* vet, int inicio, int fim){
 // considerando que os trechos de inicio ate meio e de meio+1 ate fim estao ordenados, ordena o vetor v
 void merge(int* v, int* resultado, int inicio, int meio, int fim) {
     int indiceEsq = inicio;
-    int indiceDir = meio+1;
+    int indiceDir = meio;
 
     int fimEsq = meio;
     int fimDir = fim;
@@ -38,8 +38,8 @@ void merge(int* v, int* resultado, int inicio, int meio, int fim) {
     int indice = 0;
 
     // compara os valores mais a esquerda dos vetores e copia para resultado[] o menor numero
-    while (indiceEsq <= fimEsq && indiceDir <= fimDir) {
-        if (v[indiceEsq] <= v[indiceDir]) {
+    while (indiceEsq < fimEsq && indiceDir < fimDir) {
+        if (v[indiceEsq] < v[indiceDir]) {
             resultado[indice++] = v[indiceEsq++];
         }
         else {
@@ -48,45 +48,45 @@ void merge(int* v, int* resultado, int inicio, int meio, int fim) {
     }
     
     // copia o resto do vetor que falta, esquerda ou direita
-    if (indiceEsq > fimEsq) {
-        for (int i = indiceDir; i <= fimDir; i++) {
+    if (indiceEsq >= fimEsq) {
+        for (int i = indiceDir; i < fimDir; i++) {
             resultado[indice++] = v[i];
         }
     }
-    else if (indiceDir > fimDir) {
-        for (int i = indiceEsq; i <= fimEsq; i++) {
+    else if (indiceDir >= fimDir) {
+        for (int i = indiceEsq; i < fimEsq; i++) {
             resultado[indice++] = v[i];
         }
     }
     
-    for (int i = 0; i < fim-inicio+1; i++) {
+    for (int i = 0; i < fim-inicio; i++) {
         v[i+inicio] = resultado[i];
     }
 }
 
 // se o tamanho vetor for menor ou igual a LIMITE, utiliza InsertionSort; caso contrario, utiliza MergeSort
 void mergesortMisto(int* vet, int* res, int inicio, int fim) {
-    if (fim-inicio+1 > LIMITE) {
+    if (fim-inicio > LIMITE) {
         int meio = (inicio+fim) / 2;
 
         // ordena as metades do vetor
         mergesortMisto(vet, res, inicio, meio);
-        mergesortMisto(vet, res, meio+1, fim);
+        mergesortMisto(vet, res, meio, fim);
 
         // funde metades de forma ordenada
         merge(vet, res, inicio, meio, fim);
     }
 
-    else if (fim-inicio+1 >= 1) insertionSort(vet, inicio, fim);
+    else if (fim-inicio >= 1) insertionSort(vet, inicio, fim);
 }
 
 void mergesort(int* vet, int* res, int inicio, int fim) {
-    if (fim-inicio+1 != 1) {
+    if (fim-inicio != 1) {
         int meio = (inicio+fim) / 2;
 
         // ordena as metades do vetor
         mergesort(vet, res, inicio, meio);
-        mergesort(vet, res, meio+1, fim);
+        mergesort(vet, res, meio, fim);
 
         // funde metades de forma ordenada
         merge(vet, res, inicio, meio, fim);
@@ -159,13 +159,13 @@ int main() {
     }
 
     inicio = get_wall_time();
-    mergesort(vetor, res, 0, TAM-1);
+    mergesort(vetor, res, 0, TAM);
     fim = get_wall_time();
 
     printf("Merge sort:       %lf segundos\n", fim-inicio);
 
     inicio = get_wall_time();
-    mergesortMisto(comparacao, res, 0, TAM-1);
+    mergesortMisto(comparacao, res, 0, TAM);
     fim = get_wall_time();
 
     printf("Merge sort misto: %lf segundos\n", fim-inicio);
