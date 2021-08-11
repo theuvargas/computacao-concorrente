@@ -4,8 +4,8 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-int* vetor;
-int* vetorAuxiliar;
+long long int* vetor;
+long long int* vetorAuxiliar;
 long long int tamanhoVetor;
 int nthreads;
 
@@ -17,47 +17,45 @@ void printaVetor(int* vet, int inicio, int fim) {
 }
 
 // considerando que os trechos de inicio ate meio e de meio+1 ate fim estao ordenados, ordena o vetor v
-void merge(int* v, int* resultad, int inicio, int meio, int fim) {
-    int indiceEsq = inicio;
-    int indiceDir = meio;
+void merge(long long int* v, long long int* vAuxiliar, long long inicio, long long int meio, long long int fim) {
+    long long int indiceEsq = inicio;
+    long long int indiceDir = meio;
 
-    int fimEsq = meio;
-    int fimDir = fim;
+    long long int fimEsq = meio;
+    long long int fimDir = fim;
 
-    int indice = 0;
+    long long int indice = inicio;
 
-    int resultado[tamanhoVetor];
-
-    // compara os valores mais a esquerda dos vetores e copia para resultado[] o menor numero
+    // compara os valores mais a esquerda dos vetores e copia para vAuxiliar[] o menor numero
     while (indiceEsq < fimEsq && indiceDir < fimDir) {
         if (v[indiceEsq] < v[indiceDir]) {
-            resultado[indice++] = v[indiceEsq++];
+            vAuxiliar[indice++] = v[indiceEsq++];
         }
         else {
-            resultado[indice++] = v[indiceDir++];
+            vAuxiliar[indice++] = v[indiceDir++];
         }
     }
     
     // copia o resto do vetor que falta, esquerda ou direita
     if (indiceEsq >= fimEsq) {
         for (int i = indiceDir; i < fimDir; i++) {
-            resultado[indice++] = v[i];
+            vAuxiliar[indice++] = v[i];
         }
     }
     else if (indiceDir >= fimDir) {
         for (int i = indiceEsq; i < fimEsq; i++) {
-            resultado[indice++] = v[i];
+            vAuxiliar[indice++] = v[i];
         }
     }
     
-    for (int i = 0; i < fim-inicio; i++) {
-        v[i+inicio] = resultado[i];
+    for (long long int i = 0; i < fim-inicio; i++) {
+        v[i+inicio] = vAuxiliar[inicio+i];
     }
 }
 
-void mergesort(int* vet, int* res, int inicio, int fim) {
+void mergesort(long long int* vet, long long int* res, long long int inicio, long long int fim) {
     if (fim-inicio != 1) {
-        int meio = (inicio+fim) / 2;
+        long long int meio = fim + (inicio-fim)/2;
 
         // ordena as metades do vetor
         mergesort(vet, res, inicio, meio);
@@ -68,7 +66,7 @@ void mergesort(int* vet, int* res, int inicio, int fim) {
     }
 }
 
-void preencheVetor(int* vet, int tam) {
+void preencheVetor(long long int* vet, int tam) {
     for (int i = 0; i < tam; i++) {
         vet[i] = rand() % 10;
     }
@@ -83,9 +81,9 @@ double get_wall_time(){
     return (double)time.tv_sec + (double)time.tv_usec * .000001;
 }
 
-void teste(int* v, int tam) {
-    int maior = v[0];
-    for (int i = 1; i < tam; i++) {
+void teste(long long int* v, int tam) {
+    long long int maior = v[0];
+    for (long long int i = 1; i < tam; i++) {
         if (v[i] >= maior) maior = v[i];
         else {
             printf("ordenacao incorreta\n");
@@ -98,9 +96,9 @@ void teste(int* v, int tam) {
 void* mergesortConcorrente(void* arg) {
     long id = (long) arg;
 
-    int tamanhoBloco = tamanhoVetor / nthreads;
-    int inicio = id * tamanhoBloco;
-    int fim;
+    long long int tamanhoBloco = tamanhoVetor / nthreads;
+    long long int inicio = id * tamanhoBloco;
+    long long int fim;
 
     if (id == nthreads - 1) fim = tamanhoVetor;
     else fim = inicio + tamanhoBloco;
@@ -108,37 +106,6 @@ void* mergesortConcorrente(void* arg) {
     mergesort(vetor, vetorAuxiliar, inicio, fim);
 
     pthread_exit(NULL);
-}
-
-void insertionSort(int* vet, int inicio, int fim){
-    int i, j, valor;
-    for (i = inicio+1; i < fim; i++) {
-        valor = vet[i];
-        j = i - 1;
-        while (j >= inicio && vet[j] > valor) {
-            vet[j + 1] = vet[j];
-            j = j - 1;
-        }
-        vet[j + 1] = valor;
-    }
-}
-
-void compara(int* ordenado, int* desordenado, int tam) {
-    insertionSort(desordenado, 0, tam);
-
-    for (int i = 0; i < tam; i++) {
-        if(ordenado[i] != desordenado[i]) {
-            printf("%d != %d, %d kkkkkkk\n", ordenado[i], desordenado[i], i);
-            return;
-        }
-    }
-    printf("correto\n");
-}
-
-void copiaVetor(int* fonte, int* destino, int tam) {
-    for (int i = 0; i < tam; i++) {
-        destino[i] = fonte[i];
-    }
 }
 
 int main(int argc, char** argv) {
@@ -153,14 +120,10 @@ int main(int argc, char** argv) {
     tamanhoVetor = atoll(argv[1]);
     nthreads = atoi(argv[2]);
     
-    vetor = malloc(tamanhoVetor * sizeof(int));
-    vetorAuxiliar = malloc(tamanhoVetor * sizeof(int));
+    vetor = malloc(tamanhoVetor * sizeof(long long int));
+    vetorAuxiliar = malloc(tamanhoVetor * sizeof(long long int));
 
     preencheVetor(vetor, tamanhoVetor);
-
-    int desordenado[tamanhoVetor];
-    copiaVetor(vetor, desordenado, tamanhoVetor);
-    //printaVetor(vetor, 0, tamanhoVetor);
 
     pthread_t* tid = malloc(nthreads * sizeof(pthread_t));
     
@@ -179,8 +142,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    int tamBloco = tamanhoVetor/nthreads;
-    int i;
+    long long int tamBloco = tamanhoVetor/nthreads;
+    long long int i;
     for (i = 0; i < nthreads-2; i++) {
         merge(vetor, vetorAuxiliar, 0, (i+1)*tamBloco, (i+1)*tamBloco + tamBloco);
     }
