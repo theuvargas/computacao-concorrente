@@ -53,16 +53,16 @@ void merge(long long int* v, long long int* vAuxiliar, long long inicio, long lo
     }
 }
 
-void mergesort(long long int* vet, long long int* res, long long int inicio, long long int fim) {
+void mergesort(long long int* vet, long long int* aux, long long int inicio, long long int fim) {
     if (fim-inicio != 1) {
         long long int meio = fim + (inicio-fim)/2;
 
         // ordena as metades do vetor
-        mergesort(vet, res, inicio, meio);
-        mergesort(vet, res, meio, fim);
+        mergesort(vet, aux, inicio, meio);
+        mergesort(vet, aux, meio, fim);
 
         // funde metades de forma ordenada
-        merge(vet, res, inicio, meio, fim);
+        merge(vet, aux, inicio, meio, fim);
     }
 }
 
@@ -125,37 +125,47 @@ int main(int argc, char** argv) {
 
     preencheVetor(vetor, tamanhoVetor);
 
-    pthread_t* tid = malloc(nthreads * sizeof(pthread_t));
-    
-    inicio = get_wall_time();
-    for (long int i = 0; i < nthreads; i++) {
-        if (pthread_create((tid+i), NULL, mergesortConcorrente, (void*) i)) {
-            fprintf(stderr, "Erro pthread_create\n");
-            exit(2);
+    if (nthreads == 1) {
+        inicio = get_wall_time();
+        mergesort(vetor, vetorAuxiliar, 0, tamanhoVetor);
+        fim = get_wall_time();
+    }
+
+    else {    
+        pthread_t* tid = malloc(nthreads * sizeof(pthread_t));
+        
+        inicio = get_wall_time();
+        for (long int i = 0; i < nthreads; i++) {
+            if (pthread_create((tid+i), NULL, mergesortConcorrente, (void*) i)) {
+                fprintf(stderr, "Erro pthread_create\n");
+                exit(2);
+            }
         }
-    }
-    
-    for (int i = 0; i < nthreads; i++) {
-        if (pthread_join(*(tid+i), NULL)) {
-            fprintf(stderr, "Erro pthread_join\n");
-            exit(3);
+        
+        for (int i = 0; i < nthreads; i++) {
+            if (pthread_join(*(tid+i), NULL)) {
+                fprintf(stderr, "Erro pthread_join\n");
+                exit(3);
+            }
         }
+
+        long long int tamBloco = tamanhoVetor/nthreads;
+        long long int i;
+        for (i = 0; i < nthreads-2; i++) {
+            merge(vetor, vetorAuxiliar, 0, (i+1)*tamBloco, (i+1)*tamBloco + tamBloco);
+        }
+
+        merge(vetor, vetorAuxiliar, 0, (i+1)*tamBloco, tamanhoVetor);
+        fim = get_wall_time();
+
+        
+        free(tid);
     }
 
-    long long int tamBloco = tamanhoVetor/nthreads;
-    long long int i;
-    for (i = 0; i < nthreads-2; i++) {
-        merge(vetor, vetorAuxiliar, 0, (i+1)*tamBloco, (i+1)*tamBloco + tamBloco);
-    }
-
-    merge(vetor, vetorAuxiliar, 0, (i+1)*tamBloco, tamanhoVetor);
-    fim = get_wall_time();
-
-    teste(vetor, tamanhoVetor);
-
-    printf("Tempo: %lf segundos\n", fim-inicio);
+    printf("%lf", fim-inicio);
 
     free(vetor);
     free(vetorAuxiliar);
-    free(tid);
+
+    return 0;
 }
