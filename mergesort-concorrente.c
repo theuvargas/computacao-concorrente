@@ -123,6 +123,11 @@ int main(int argc, char** argv) {
     vetor = malloc(tamanhoVetor * sizeof(long long int));
     vetorAuxiliar = malloc(tamanhoVetor * sizeof(long long int));
 
+    if (vetor == NULL || vetorAuxiliar == NULL) {
+        fprintf(stderr, "Erro malloc\n");
+        exit(2);
+    }
+
     preencheVetor(vetor, tamanhoVetor);
 
     if (nthreads == 1) {
@@ -134,18 +139,23 @@ int main(int argc, char** argv) {
     else {    
         pthread_t* tid = malloc(nthreads * sizeof(pthread_t));
         
+        if (tid == NULL) {
+            fprintf(stderr, "Erro malloc\n");
+            exit(2);
+        }
+
         inicio = get_wall_time();
         for (long int i = 0; i < nthreads; i++) {
             if (pthread_create((tid+i), NULL, mergesortConcorrente, (void*) i)) {
                 fprintf(stderr, "Erro pthread_create\n");
-                exit(2);
+                exit(3);
             }
         }
         
         for (int i = 0; i < nthreads; i++) {
             if (pthread_join(*(tid+i), NULL)) {
                 fprintf(stderr, "Erro pthread_join\n");
-                exit(3);
+                exit(4);
             }
         }
 
