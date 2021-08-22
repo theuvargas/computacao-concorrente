@@ -15,12 +15,14 @@ bool imprimiu3 = false;
 bool imprimiu4 = false;
 
 void* thread1(void* arg) {
+    char* mensagem = (char*) arg;
+
     pthread_mutex_lock(&lock);
     if (!imprimiu2) { // nao precisa de while
         pthread_cond_wait(&cond, &lock);
     }
     
-    printf("Fique a vontade.\n");
+    printf("%s\n", mensagem);
     imprimiu1 = true;
     pthread_cond_signal(&cond);
 
@@ -29,9 +31,11 @@ void* thread1(void* arg) {
 }
 
 void* thread2(void* arg) {
+    char* mensagem = (char*) arg;
+
     pthread_mutex_lock(&lock);
-    
-    printf("Seja bem vindo!\n");
+
+    printf("%s\n", mensagem);
     imprimiu2 = true;
     pthread_cond_broadcast(&cond); // caso seja a ultima thread a executar, sera necessario acordar todas as outras
 
@@ -40,12 +44,14 @@ void* thread2(void* arg) {
 }
 
 void* thread3(void* arg) {
+    char* mensagem = (char*) arg;
+    
     pthread_mutex_lock(&lock);
     while (!imprimiu1 || !imprimiu4) { // precisa de while pois outra thread pode acorda-la antes das threads 1 e 4 terem imprimido
         pthread_cond_wait(&cond, &lock);
     }
 
-    printf("Volte sempre!\n");
+    printf("%s\n", mensagem);
     imprimiu3 = true; // linha desnecessaria
 
     pthread_mutex_unlock(&lock);
@@ -53,12 +59,14 @@ void* thread3(void* arg) {
 }
 
 void* thread4(void* arg) {
+    char* mensagem = (char*) arg;
+
     pthread_mutex_lock(&lock);
     if (!imprimiu2) {
         pthread_cond_wait(&cond, &lock);
     }
 
-    printf("Sente-se por favor.\n");
+    printf("%s\n", mensagem);
     imprimiu4 = true;
     pthread_cond_signal(&cond);
 
@@ -72,10 +80,10 @@ int main() {
 
     pthread_t tid[NTHREADS];
 
-    if (pthread_create(&tid[0], NULL, thread1, NULL) ||
-        pthread_create(&tid[1], NULL, thread2, NULL) ||
-        pthread_create(&tid[2], NULL, thread3, NULL) ||
-        pthread_create(&tid[3], NULL, thread4, NULL)
+    if (pthread_create(&tid[0], NULL, thread1, "Fique a vontade.") ||
+        pthread_create(&tid[1], NULL, thread2, "Seja bem vindo!") ||
+        pthread_create(&tid[2], NULL, thread3, "Volte sempre!") ||
+        pthread_create(&tid[3], NULL, thread4, "Sente-se por favor.")
     ) {
         fprintf(stderr, "Erro pthread_create()\n");
         exit(1);
