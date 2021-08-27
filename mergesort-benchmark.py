@@ -1,22 +1,35 @@
 import subprocess, sys
 
-nthreads = sys.argv[1]
+if len(sys.argv) < 2:
+    print(f'Digite: python3 {sys.argv[0]} <numero de zeros>')
+    exit(1)
 
-tamanhos = [6, 7, 8]
+tamanhos = []
+for i in range(1, len(sys.argv)):
+    tamanhos.append(sys.argv[i])
+
+nthreads = [1, 2, 4, 6]
 n_execucoes = 5
 
 resultado = []
 
-print(f'{nthreads} threads e {n_execucoes} execuções:\n')
+for tamanho in tamanhos:
+    print(f'10^{tamanho} números e {n_execucoes} execuções:\n')
+    mediaSeq = 0
+    for n in nthreads:
+        print(f'{n} threads:')
+        for i in range(n_execucoes):
+            s = subprocess.check_output(f'./a {10**int(tamanho)} {n}', shell = True)    
+            resultado.append(float(s.decode('ascii')))
+            
+            media = sum(resultado)/len(resultado)
+            minimo = min(resultado)
 
-for n in tamanhos:
-    print(f'Tamanho: 10^{n}')
-    for i in range(n_execucoes):
-        s = subprocess.check_output(f'./mergesort {10**n} {nthreads}', shell = True)    
-        resultado.append(float(s.decode('ascii')))
-        
-        mediaConc = sum(resultado)/len(resultado)
-        minConc = min(resultado)
+        if n == 1:
+            mediaSeq = media
+            print(f'Tempo mínimo: {minimo:.6f}s | Tempo médio: {media:.6f}s | Aceleração: -\n')
 
-    print(f'Tempo médio: {round(mediaConc, 6)}s | Tempo mínimo: {round(minConc, 6)}s\n')
-    resultado = []
+        else:
+            print(f'Tempo mínimo: {minimo:.6f}s | Tempo médio: {media:.6f}s | Aceleração: {mediaSeq/media:.6f}\n')
+
+        resultado = []
