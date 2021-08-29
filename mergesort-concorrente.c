@@ -3,6 +3,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <string.h>
 
 long long int* vetor;
 long long int* vetorAuxiliar;
@@ -68,7 +69,7 @@ void mergesort(long long int* vet, long long int* aux, long long int inicio, lon
 
 void preencheVetor(long long int* vet, int tam) {
     for (int i = 0; i < tam; i++) {
-        vet[i] = rand() % 10;
+        vet[i] = rand() % 1000;
     }
 }
 
@@ -93,7 +94,7 @@ void teste(long long int* v, int tam) {
     printf("teste passou\n");
 }
 
-void* mergesortConcorrente(void* arg) {
+void* processaMergesortConcorrente(void* arg) {
     long id = (long) arg;
 
     long long int tamanhoBloco = tamanhoVetor / nthreads;
@@ -108,32 +109,9 @@ void* mergesortConcorrente(void* arg) {
     pthread_exit(NULL);
 }
 
-int main(int argc, char** argv) {
-    srand(time(NULL));
-    double inicio, fim;
-    
-    if (argc < 3) {
-        fprintf(stderr, "Digite %s <tamanho do vetor> <numero de threads>\n", argv[0]);
-        exit(1);
-    }
-
-    tamanhoVetor = atoll(argv[1]);
-    nthreads = atoi(argv[2]);
-    
-    vetor = malloc(tamanhoVetor * sizeof(long long int));
-    vetorAuxiliar = malloc(tamanhoVetor * sizeof(long long int));
-
-    if (vetor == NULL || vetorAuxiliar == NULL) {
-        fprintf(stderr, "Erro malloc\n");
-        exit(2);
-    }
-
-    preencheVetor(vetor, tamanhoVetor);
-
+void mergesortConcorrente(long long int* vetor, int tamanho, int nthreads) {
     if (nthreads == 1) {
-        inicio = get_wall_time();
         mergesort(vetor, vetorAuxiliar, 0, tamanhoVetor);
-        fim = get_wall_time();
     }
 
     else {    
@@ -144,9 +122,8 @@ int main(int argc, char** argv) {
             exit(2);
         }
 
-        inicio = get_wall_time();
         for (long int i = 0; i < nthreads; i++) {
-            if (pthread_create((tid+i), NULL, mergesortConcorrente, (void*) i)) {
+            if (pthread_create((tid+i), NULL, processaMergesortConcorrente, (void*) i)) {
                 fprintf(stderr, "Erro pthread_create\n");
                 exit(3);
             }
@@ -166,14 +143,81 @@ int main(int argc, char** argv) {
         }
 
         merge(vetor, vetorAuxiliar, 0, (i+1)*tamBloco, tamanhoVetor);
-        fim = get_wall_time();
-
         
         free(tid);
     }
+}
 
-    printf("%lf", fim-inicio);
+void testes(long long int* vetor, int tamanho, int nthreads) {
+    printf("Caso de teste: vetor ordenado\n");
 
+    for (size_t i = 0; i < tamanho; i++) {
+        vetor[i] = i;
+    }
+
+    mergesortConcorrente(vetor, tamanho, nthreads);
+
+    teste(vetor, tamanho);
+
+
+    printf("Caso de teste: vetor decrescente\n");
+
+    for (size_t i = 0; i < tamanho; i++) {
+        vetor[i] = tamanho-i;
+    }
+
+    mergesortConcorrente(vetor, tamanho, nthreads);
+
+    teste(vetor, tamanho);
+
+    printf("Caso de teste: vetor aleatorio\n");
+
+    for (size_t i = 0; i < tamanho; i++) {
+        vetor[i] = rand() % 1000;
+    }
+
+    mergesortConcorrente(vetor, tamanho, nthreads);
+
+    teste(vetor, tamanho);
+}
+
+int main(int argc, char** argv) {
+    // srand(time(NULL));
+    double inicio, fim;
+
+    if (argc < 3) {
+        fprintf(stderr, "Digite %s <tamanho do vetor> <numero de threads>\n", argv[0]);
+        exit(1);
+    }
+
+    tamanhoVetor = atoll(argv[1]);
+    nthreads = atoi(argv[2]);
+    
+    vetor = malloc(tamanhoVetor * sizeof(long long int));
+    vetorAuxiliar = malloc(tamanhoVetor * sizeof(long long int));
+
+    if (vetor == NULL || vetorAuxiliar == NULL) {
+        fprintf(stderr, "Erro malloc\n");
+        exit(2);
+    }
+
+    preencheVetor(vetor, tamanhoVetor);
+
+    if (argc == 4) {
+        if (strcmp(argv[3], "teste") == 0) {
+            testes(vetor, tamanhoVetor, nthreads);
+        }
+        else printf("quarto argumento invalido\n");
+    }
+
+    else {
+        inicio = get_wall_time();
+        mergesortConcorrente(vetor, tamanhoVetor, nthreads);
+        fim = get_wall_time();
+        printf("%lf\n", fim-inicio);
+    }
+
+    
     free(vetor);
     free(vetorAuxiliar);
 
