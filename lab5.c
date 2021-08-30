@@ -42,12 +42,6 @@ void* tarefa(void* arg) {
         barreira(nthreads);
     }
 
-    // soma final
-    for (size_t j = 0; j < tamanho; j++) {
-        *somatorio += vetor[j];
-    }
-    printf("thread %ld terminou de somar: %d\n", id, *somatorio);
-
     pthread_exit(somatorio);
 }
 
@@ -104,7 +98,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    // int* retorno = malloc(nthreads * sizeof(int));
     int retornoVetor[nthreads];
     for (size_t i = 0; i < nthreads; i++) {
         int* retornoValor;
