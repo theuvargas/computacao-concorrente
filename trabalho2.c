@@ -98,7 +98,6 @@ int* retira(long id) {
 }
 
 void* produtor(void* arg) {
-    leArquivo("entrada.txt");
     char** vetorStr = leArquivo("entrada.txt");
 
     for (int i = 0; i < numLinhas; i++) {
