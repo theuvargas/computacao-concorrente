@@ -23,28 +23,19 @@ bool escrevendo = false;
 pthread_cond_t cond_cons, cond_prod, cond_escr;
 pthread_mutex_t mutex, mutex2;
 
-// altera numElementos, numLinhas e retorna um vetor todas as linhas do arquivo, exceto a primeira
-char** leArquivo(char* nome) {
-    int tamanhoLinha = 10000;
-    char* linha = malloc(sizeof(char) * tamanhoLinha);
-    FILE *fp = fopen(nome, "r");
-    fgets(linha, tamanhoLinha, fp);
-    numElementos = atoi(linha);
-
-    numLinhas = numElementos/tamBloco;
+void insere(int* vetor) {
+    pthread_mutex_lock(&mutex);
     
-    char** vetorStr = malloc(sizeof(char*) * numLinhas);
-
-    int i = 0;
-    while (fgets(linha, tamanhoLinha, fp)) {
-        char* str = malloc(sizeof(char) * tamanhoLinha);
-        strcpy(str, linha);
-        vetorStr[i] = str;
-        i++;
+    while (contador == TAMBUF) {
+        pthread_cond_wait(&cond_prod, &mutex);
     }
-    fclose(fp);
+    
+    buffer[in] = vetor;
+    in = (in+1) % TAMBUF;
+    contador++;
 
-    return vetorStr;
+    pthread_mutex_unlock(&mutex);
+    pthread_cond_signal(&cond_cons);
 }
 
 int* stringParaVetorInt(char* str) {
@@ -65,21 +56,6 @@ void printaVetor(int* vetor, int n, FILE* fp) {
     fprintf(fp, "\n");
 }
 
-void insere(int* vetor) {
-    pthread_mutex_lock(&mutex);
-    
-    while (contador == TAMBUF) {
-        pthread_cond_wait(&cond_prod, &mutex);
-    }
-    
-    buffer[in] = vetor;
-    in = (in+1) % TAMBUF;
-    contador++;
-
-    pthread_mutex_unlock(&mutex);
-    pthread_cond_signal(&cond_cons);
-}
-
 int* retira(long id) {
     pthread_mutex_lock(&mutex);
 
@@ -98,13 +74,18 @@ int* retira(long id) {
 }
 
 void* produtor(void* arg) {
-    char** vetorStr = leArquivo("entrada.txt");
+    int tamanhoLinha = 10000;
+    char* linha = malloc(sizeof(char) * tamanhoLinha);
+    FILE *fp = fopen("entrada.txt", "r");
+    fgets(linha, tamanhoLinha, fp);
+    numElementos = atoi(linha);
 
-    for (int i = 0; i < numLinhas; i++) {
-        insere(stringParaVetorInt(vetorStr[i]));
+    numLinhas = numElementos/tamBloco;
+    
+    while (fgets(linha, tamanhoLinha, fp)) {
+        insere(stringParaVetorInt(linha));
     }
-
-    free(vetorStr);
+    fclose(fp);
 
     pthread_exit(NULL);
 }
@@ -164,19 +145,20 @@ void* consumidorEscritor(void* arg) {
 
     pthread_mutex_unlock(&mutex);
 
-    entraEscritor(id);
+    pthread_mutex_lock(&mutex2);
     while (elementosEscritos < numElementos) {
         int* vetor = retira(id);
 
         insertionSort(vetor, tamBloco);
 
+        entraEscritor(id);
         printaVetor(vetor, tamBloco, fp);
-
         elementosEscritos += tamBloco;
-        
+        saiEscritor();
+
         free(vetor);
     }
-    saiEscritor();
+    pthread_mutex_unlock(&mutex2);
 
     fclose(fp);
 
