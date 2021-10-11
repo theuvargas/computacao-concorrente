@@ -43,8 +43,12 @@ int* stringParaVetorInt(char* str) {
     int* vetor = malloc(sizeof(int) * tamBloco);
 
     int i = 0;
-    while((num = strsep(&str, " "))) 
+    while((num = strsep(&str, " "))) {
+        if (strcmp("\n", num) == 0) 
+            break;
+        
         vetor[i++] = atoi(num);
+    }
 
     return vetor;
 }
@@ -59,13 +63,20 @@ void printaVetor(int* vetor, int n, FILE* fp) {
 int* retira(long id) {
     pthread_mutex_lock(&mutex);
 
+    int* vetor = NULL;
     while (contador == 0) {
+        if (elementosEscritos >= numElementos) {
+            break;
+        }
         pthread_cond_wait(&cond_cons, &mutex);
     }
-    contador--;
-    int* vetor = buffer[out];
 
-    out = (out+1) % TAMBUF;
+    if (elementosEscritos < numElementos) {
+        contador--;
+        vetor = buffer[out];
+
+        out = (out+1) % TAMBUF;
+    }
 
     pthread_mutex_unlock(&mutex);
     pthread_cond_signal(&cond_prod);
@@ -74,7 +85,7 @@ int* retira(long id) {
 }
 
 void* produtor(void* arg) {
-    int tamanhoLinha = 10000;
+    int tamanhoLinha = 100000;
     char* linha = malloc(sizeof(char) * tamanhoLinha);
     FILE *fp = fopen("entrada.txt", "r");
     fgets(linha, tamanhoLinha, fp);
@@ -145,9 +156,10 @@ void* consumidorEscritor(void* arg) {
 
     pthread_mutex_unlock(&mutex);
 
-    pthread_mutex_lock(&mutex2);
     while (elementosEscritos < numElementos) {
         int* vetor = retira(id);
+        
+        if (vetor == NULL) break;
 
         insertionSort(vetor, tamBloco);
 
@@ -158,8 +170,8 @@ void* consumidorEscritor(void* arg) {
 
         free(vetor);
     }
-    pthread_mutex_unlock(&mutex2);
 
+    pthread_cond_broadcast(&cond_cons);
     fclose(fp);
 
     pthread_exit(NULL);
