@@ -23,7 +23,7 @@ bool escrevendo = false;
 char* resultado;
 
 pthread_cond_t cond_cons, cond_prod, cond_escr;
-pthread_mutex_t mutex, mutex2;
+pthread_mutex_t mutex;
 
 void criaArquivo(char* str) {
     FILE* fp = fopen("saida.txt", "w");
@@ -73,6 +73,7 @@ char* vetorParaString(int* vetor, int n) {
     for (int i = 0; i < n; i++) {
         sprintf(linha + strlen(linha), "%d ", vetor[i]);
     }
+    linha[strlen(linha)-1] = '\0';
     return linha;
 }
 
@@ -228,7 +229,6 @@ int main(int argc, char** argv) {
     }
 
     pthread_mutex_init(&mutex, NULL);
-    pthread_mutex_init(&mutex2, NULL);
 
     pthread_cond_init(&cond_cons, NULL);
     pthread_cond_init(&cond_prod, NULL);
@@ -257,7 +257,6 @@ int main(int argc, char** argv) {
     free(buffer);
 
     pthread_mutex_destroy(&mutex);
-    pthread_mutex_destroy(&mutex2);
 
     pthread_cond_destroy(&cond_cons);
     pthread_cond_destroy(&cond_prod);
