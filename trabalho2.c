@@ -229,16 +229,6 @@ int main(int argc, char** argv) {
     tamBloco = atoi(argv[1]);
     int nthreads = atoi(argv[2]);
 
-    for (int i = 0; i < TAMBUF; i++) {
-        buffer[i] = malloc(sizeof(int) * tamBloco);
-
-        if (buffer[i] == NULL) {
-            printf("erro malloc\n");
-            exit(2);
-        }
-        
-    }
-
     pthread_mutex_init(&mutex, NULL);
 
     pthread_cond_init(&cond_cons, NULL);
