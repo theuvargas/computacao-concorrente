@@ -13,11 +13,11 @@ with open('entrada.txt', 'w') as file:
     file.write(str(qtd_numeros) + '\n')
     for i in range(numero_linhas):
         for j in range(tamanho_bloco):
-            file.write(str(random.randint(0, 99)) + ' ')
+            file.write(str(random.randint(10, 99)) + ' ')
         file.write('\n')
 
 nthreads = [1, 2, 4]
-num_execucoes = 5
+num_execucoes = 10
 
 mediaSeq = 0
 
