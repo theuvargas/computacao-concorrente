@@ -33,7 +33,7 @@ void criaArquivo(char* str) {
         exit(5);
     }
 
-    fprintf(fp, str);
+    fputs(str, fp);
 
     fclose(fp);
 }
@@ -73,7 +73,6 @@ char* vetorParaString(int* vetor, int n) {
     for (int i = 0; i < n; i++) {
         sprintf(linha + strlen(linha), "%d ", vetor[i]);
     }
-    sprintf(linha + strlen(linha)-1, "\n");
     return linha;
 }
 
@@ -170,7 +169,7 @@ void* consumidorEscritor(void* arg) {
 
         entraEscritor(id);        
         char* linha = vetorParaString(vetor, tamBloco);
-        sprintf(resultado+strlen(resultado), linha);
+        sprintf(resultado+strlen(resultado), "%s\n", linha);
         elementosEscritos += tamBloco;
         saiEscritor();
 
