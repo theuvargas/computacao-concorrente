@@ -20,8 +20,23 @@ bool arquivoCriado = false;
 
 bool escrevendo = false;
 
+char* resultado;
+
 pthread_cond_t cond_cons, cond_prod, cond_escr;
 pthread_mutex_t mutex, mutex2;
+
+void criaArquivo(char* str) {
+    FILE* fp = fopen("saida.txt", "w");
+       
+    if (fp == NULL) {
+        fprintf(stderr, "Erro fopen\n");
+        exit(5);
+    }
+
+    fprintf(fp, str);
+
+    fclose(fp);
+}
 
 void insere(int* vetor) {
     pthread_mutex_lock(&mutex);
@@ -53,11 +68,13 @@ int* stringParaVetorInt(char* str) {
     return vetor;
 }
 
-void printaVetor(int* vetor, int n, FILE* fp) {
+char* vetorParaString(int* vetor, int n) {
+    char* linha = malloc(10000);
     for (int i = 0; i < n; i++) {
-        fprintf(fp, "%d ", vetor[i]);
+        sprintf(linha + strlen(linha), "%d ", vetor[i]);
     }
-    fprintf(fp, "\n");
+    sprintf(linha + strlen(linha)-1, "\n");
+    return linha;
 }
 
 int* retira(long id) {
@@ -96,6 +113,8 @@ void* produtor(void* arg) {
     while (fgets(linha, tamanhoLinha, fp)) {
         insere(stringParaVetorInt(linha));
     }
+
+    free(linha);
     fclose(fp);
 
     pthread_exit(NULL);
@@ -136,20 +155,6 @@ void* consumidorEscritor(void* arg) {
 
     pthread_mutex_lock(&mutex);
 
-    FILE* fp;
-    if (!arquivoCriado) {
-        fp = fopen("saida.txt", "w");
-        arquivoCriado = true;
-    }
-    else {
-        fp = fopen("saida.txt", "a");
-    }
-
-    if (fp == NULL) {
-        fprintf(stderr, "Erro fopen\n");
-        exit(5);
-    }
-
     while (numElementos == -1) {
         pthread_cond_wait(&cond_cons, &mutex);
     }
@@ -163,16 +168,24 @@ void* consumidorEscritor(void* arg) {
 
         insertionSort(vetor, tamBloco);
 
-        entraEscritor(id);
-        printaVetor(vetor, tamBloco, fp);
+        entraEscritor(id);        
+        char* linha = vetorParaString(vetor, tamBloco);
+        sprintf(resultado+strlen(resultado), linha);
         elementosEscritos += tamBloco;
         saiEscritor();
 
         free(vetor);
     }
 
+    pthread_mutex_lock(&mutex);
+    if (!arquivoCriado) {
+        criaArquivo(resultado);
+        arquivoCriado = true;
+        free(resultado);
+    }
+    pthread_mutex_unlock(&mutex);
+
     pthread_cond_broadcast(&cond_cons);
-    fclose(fp);
 
     pthread_exit(NULL);
 }
@@ -190,8 +203,9 @@ int main(int argc, char** argv) {
     double inicio = get_wall_time();
 
     buffer = malloc(sizeof(int*) * TAMBUF);
+    resultado = malloc(10000000);
 
-    if (buffer == NULL) {
+    if (buffer == NULL || resultado == NULL) {
         printf("erro malloc\n");
         exit(1);
     }
