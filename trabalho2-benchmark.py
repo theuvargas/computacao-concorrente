@@ -17,7 +17,7 @@ with open('entrada.txt', 'w') as file:
         file.write('\n')
 
 nthreads = [1, 2, 4]
-num_execucoes = 10
+num_execucoes = 2
 
 mediaSeq = 0
 

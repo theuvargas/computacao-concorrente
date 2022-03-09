@@ -19,8 +19,8 @@ for tamanho in tamanhos:
     for n in nthreads:
         print(f'{n} threads:')
         for i in range(n_execucoes):
-            s = subprocess.check_output(f'./a {10**int(tamanho)} {n}', shell = True)    
-            resultado.append(float(s.decode('ascii')))
+            saida = subprocess.run(f'./a {10**int(tamanho)} {n}', shell=True, check=True, capture_output=True, text=True)    
+            resultado.append(float(saida.stdout))
             
             media = sum(resultado)/len(resultado)
             minimo = min(resultado)
